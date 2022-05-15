@@ -3,7 +3,6 @@ package repository
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
 	"github.com/timyulia/todo-app"
 	"strings"
 )
@@ -94,9 +93,6 @@ func (r *TodoItemPostgres) Update(userId, itemId int, input todo.UpdateItemInput
 	query := fmt.Sprintf("UPDATE %s ti SET %s FROM %s li, %s ul WHERE ti.id=li.item_id AND li.list_id=ul.list_id AND ti.id=$%d AND ul.user_id=$%d",
 		todoItemsTable, setQuery, listsItemsTable, usersListsTable, argId, argId+1)
 	args = append(args, itemId, userId)
-
-	logrus.Debugf("updateQuery: %s", query)
-	logrus.Debugf("args: %s", args)
 
 	_, err := r.db.Exec(query, args...)
 	return err
