@@ -42,10 +42,25 @@ func (r *TodoItemPostgres) Create(listId int, item todo.TodoItem) (int, error) {
 
 func (r *TodoItemPostgres) GetAll(userId, listId int) ([]todo.TodoItem, error) {
 	var items []todo.TodoItem
-	query := fmt.Sprintf("SELECT ti.title, ti.description, ti.done FROM %s ti INNER JOIN %s li ON ti.id=li.item_id INNER JOIN %s ul ON ul.list_id=li.list_id WHERE li.list_id=$1 AND ul.user_id=$2",
+	query := fmt.Sprintf("SELECT ti.id, ti.title, ti.description, ti.done FROM %s ti INNER JOIN %s li ON ti.id=li.item_id INNER JOIN %s ul ON ul.list_id=li.list_id WHERE li.list_id=$1 AND ul.user_id=$2",
 		todoItemsTable, listsItemsTable, usersListsTable)
 	if err := r.db.Select(&items, query, listId, userId); err != nil {
 		return nil, err
 	}
 	return items, nil
+}
+
+func (r *TodoItemPostgres) GetById(userId, itemId int) (todo.TodoItem, error) {
+	var item todo.TodoItem
+	query := fmt.Sprintf("SELECT ti.id, ti.title, ti.description, ti.done FROM %s ti INNER JOIN %s li ON ti.id=li.item_id INNER JOIN %s ul ON ul.list_id=li.list_id WHERE ul.user_id=$1 AND ti.id=$2",
+		todoItemsTable, listsItemsTable, usersListsTable)
+	err := r.db.Get(&item, query, userId, itemId)
+	return item, err
+}
+
+func (r *TodoItemPostgres) Delete(userId, itemId int) error {
+	query := fmt.Sprintf("DELETE FROM %s ti USING %s li, %s ul WHERE ti.id=li.item_id AND li.list_id=ul.list_id AND ul.user_id=$1 AND ti.id=$2",
+		todoItemsTable, listsItemsTable, usersListsTable)
+	_, err := r.db.Exec(query, userId, itemId)
+	return err
 }
